@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    username: mysql
+    password: mysql
+    url: jdbc:mysql://localhost:3306/file_storage
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties.hibernate:
+      show_sql: true
+      format_sql: true
+
+  flyway:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    default-schema: file_storage
+    locations: filesystem:src/main/resources/db/migration
+
+jwt:
+  secret:
+    access: qBTmv4oXFFR2GwjexDJ4t6fsIUIUhhXqlktXjXdkcyygs8nPVEwMfo29VDRRepYDVV5IkIxBMzr7OEHXEHd37w==
+    refresh: zL1HB3Pch05Avfynovxrf/kpF9O2m4NCWKJUjEp27s9J2jEG3ifiKCGylaZ8fDeoONSTJP/wAzKawB8F9rOMNg==
+
+aws:
+  endpointUrl: https://s3.us-east-1.amazonaws.com
+  bucketName:  BUCKET_NAME
+  accessKey: ACCESS_KEY
+  secretKey: SECRET_KEY
