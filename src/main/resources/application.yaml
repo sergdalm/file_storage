@@ -22,6 +22,7 @@ jwt:
 
 aws:
   endpointUrl: https://s3.us-east-1.amazonaws.com
+  region: us-east-1
   bucketName:  BUCKET_NAME
   accessKey: ACCESS_KEY
   secretKey: SECRET_KEY

@@ -1,5 +1,6 @@
 package com.sergdalm.file_storage.service.jwt;
 
+import com.sergdalm.file_storage.dto.jwt.JwtAuthentication;
 import com.sergdalm.file_storage.model.Role;
 import io.jsonwebtoken.Claims;
 import lombok.AccessLevel;

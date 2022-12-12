@@ -4,11 +4,10 @@ import com.sergdalm.file_storage.dto.FileCreateEditDto;
 import com.sergdalm.file_storage.dto.FileCreateEditDtoForRest;
 import com.sergdalm.file_storage.dto.FileReadDto;
 import com.sergdalm.file_storage.dto.UserReadDto;
-import com.sergdalm.file_storage.model.File;
+import com.sergdalm.file_storage.dto.jwt.JwtAuthentication;
 import com.sergdalm.file_storage.model.Role;
-import com.sergdalm.file_storage.service.GenericFileService;
+import com.sergdalm.file_storage.service.FileService;
 import com.sergdalm.file_storage.service.UserService;
-import com.sergdalm.file_storage.service.jwt.JwtAuthentication;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.Objects;
 
 import static org.springframework.http.ResponseEntity.noContent;
@@ -38,26 +37,27 @@ import static org.springframework.http.ResponseEntity.notFound;
 @RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
 @Getter
-public class FileRestControllerV1 implements GenericRestController<Integer, FileCreateEditDtoForRest, FileReadDto, JwtAuthentication, File> {
+public class FileRestControllerV1 implements EditGenericRestController<Integer, FileCreateEditDtoForRest, FileReadDto, JwtAuthentication>,
+        ReadGenericRestController<Integer, FileCreateEditDto, FileReadDto> {
 
-    private final GenericFileService<Integer, FileCreateEditDto, FileReadDto, File> service;
+    private final FileService service;
     private final UserService userService;
 
-    @GetMapping("/{id}")
-    public FileReadDto findById(@PathVariable("id") Integer id) {
-        return service.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    }
-
     @GetMapping("/{id}/download")
-    public ResponseEntity<InputStream> downloadFile(@PathVariable("id") Integer id,
-                                                    JwtAuthentication jwtAuthentication) {
+    public ResponseEntity<byte[]> downloadFile(@PathVariable("id") Integer id,
+                                               JwtAuthentication jwtAuthentication) {
         return service.downloadFile(id, jwtAuthentication.getId())
                 .map(content -> {
-                    return ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                            .body(content);
-                }).orElseGet(notFound()::build);
+                    try {
+                        return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                                .contentLength(content.available())
+                                .body(content.readAllBytes());
+                    } catch (IOException e) {
+                        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                    }
+                })
+                .orElseGet(notFound()::build);
     }
 
     @PostMapping

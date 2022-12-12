@@ -37,9 +37,9 @@ public class SecurityConfiguration {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(urlConfig -> urlConfig
-                                .antMatchers("v3/api-docs/**", "/swagger-ui/**", "/api/v1/auth/login", "/api/v1/auth/token").permitAll()
-                                .anyRequest().authenticated()
-                                .and()
+                        .antMatchers("v3/api-docs/**", "/swagger-ui/**", "/api/v1/auth/login", "/api/v1/auth/token").permitAll()
+                        .anyRequest().authenticated()
+                        .and()
                 );
         return http.build();
     }

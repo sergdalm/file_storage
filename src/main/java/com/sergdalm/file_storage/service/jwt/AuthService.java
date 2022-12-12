@@ -1,6 +1,7 @@
 package com.sergdalm.file_storage.service.jwt;
 
 import com.sergdalm.file_storage.dto.UserLoginDto;
+import com.sergdalm.file_storage.dto.jwt.JwtAuthentication;
 import com.sergdalm.file_storage.dto.jwt.JwtRequest;
 import com.sergdalm.file_storage.dto.jwt.JwtResponse;
 import com.sergdalm.file_storage.service.UserService;

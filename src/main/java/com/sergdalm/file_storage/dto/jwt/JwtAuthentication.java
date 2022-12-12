@@ -1,4 +1,4 @@
-package com.sergdalm.file_storage.service.jwt;
+package com.sergdalm.file_storage.dto.jwt;
 
 import com.sergdalm.file_storage.model.Role;
 import lombok.Getter;

@@ -2,3 +2,10 @@ spring:
   datasource:
     username: root
     password: test
+
+aws:
+  endpointUrl: http://localhost:8001
+  region: us-west-2
+  bucketName:  BUCKET_NAME
+  accessKey: ACCESS_KEY
+  secretKey: SECRET_KEY

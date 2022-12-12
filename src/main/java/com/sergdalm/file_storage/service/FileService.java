@@ -1,7 +1,9 @@
 package com.sergdalm.file_storage.service;
 
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.sergdalm.file_storage.dto.FileCreateEditDto;
 import com.sergdalm.file_storage.dto.FileReadDto;
+import com.sergdalm.file_storage.dto.FileUploadResult;
 import com.sergdalm.file_storage.mapper.CreateEditMapper;
 import com.sergdalm.file_storage.mapper.ReadMapper;
 import com.sergdalm.file_storage.model.Event;
@@ -14,10 +16,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -30,7 +34,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Getter
 @Slf4j
-public class FileService implements GenericFileService<Integer, FileCreateEditDto, FileReadDto, File> {
+public class FileService implements GenericService<Integer, FileCreateEditDto, FileReadDto, File> {
 
     private final FileRepository repository;
     private final UserRepository userRepository;
@@ -38,17 +42,20 @@ public class FileService implements GenericFileService<Integer, FileCreateEditDt
     private final AmazonClient amazonClient;
     private final CreateEditMapper<File, FileCreateEditDto> createEditMapper;
     private final ReadMapper<File, FileReadDto> readMapper;
-    private final String bucket = "C:\\Users\\Hello\\Documents\\GitHub\\file_storage\\files";
+    private final String bucket = "";
 
     @Transactional
     @Override
     public FileReadDto create(FileCreateEditDto dto) {
         MultipartFile fileContent = dto.getFileContent();
-        String fileUrl = amazonClient.uploadFile(dto.getFileName(), dto.getFileContent());
+        FileUploadResult fileUploadResult = amazonClient.uploadFile(dto.getFileName(), dto.getFileContent());
+        if (!fileUploadResult.isUploadedResult()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         File fileEntity = File.builder()
                 .name(dto.getFileName())
                 .size(fileContent.getSize())
-                .fileUrl(fileUrl)
+                .fileUrl(fileUploadResult.getFileUrl())
                 .size(dto.getFileContent().getSize())
                 .build();
         getRepository().save(fileEntity);
@@ -68,8 +75,11 @@ public class FileService implements GenericFileService<Integer, FileCreateEditDt
         return getRepository().findById(id)
                 .map(entity -> {
                     amazonClient.deleteFileFromS3Bucket(entity.getFileUrl());
-                    String fileUrl = amazonClient.uploadFile(dto.getFileName(), dto.getFileContent());
-                    entity.setFileUrl(fileUrl);
+                    FileUploadResult fileUploadResult = amazonClient.uploadFile(dto.getFileName(), dto.getFileContent());
+                    if (!fileUploadResult.isUploadedResult()) {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                    entity.setFileUrl(fileUploadResult.getFileUrl());
                     return getCreateEditMapper().mapToEntity(dto, entity);
                 })
                 .map(getRepository()::saveAndFlush)
@@ -89,7 +99,8 @@ public class FileService implements GenericFileService<Integer, FileCreateEditDt
                 .orElse(false);
     }
 
-    public Optional<InputStream> downloadFile(Integer fileId, Integer userId) {
+    @Transactional
+    public Optional<S3ObjectInputStream> downloadFile(Integer fileId, Integer userId) {
         return getRepository().findById(fileId)
                 .map(file -> {
                     Event event = Event.builder()
@@ -103,7 +114,7 @@ public class FileService implements GenericFileService<Integer, FileCreateEditDt
                 })
                 .map(File::getFileUrl)
                 .filter(StringUtils::hasText)
-                .flatMap(this::getContent);  // ИСПРАВТЬ ЭТОТ МЕТОД
+                .map(amazonClient::downloadFromS3Bucket);  // ИСПРАВТЬ ЭТОТ МЕТОД
     }
 
     @SneakyThrows

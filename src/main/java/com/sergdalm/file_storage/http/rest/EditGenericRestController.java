@@ -2,7 +2,7 @@ package com.sergdalm.file_storage.http.rest;
 
 import org.springframework.http.ResponseEntity;
 
-public interface GenericRestController<ID, C, R, J, E> extends ReadGenericRestController<ID, C, R, E> {
+public interface EditGenericRestController<ID, C, R, J> {
 
     R update(ID id, C createDto, J jwtAuthentication);
 

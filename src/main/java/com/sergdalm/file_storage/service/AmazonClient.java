@@ -4,8 +4,9 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.sergdalm.file_storage.config.AwsProperties;
+import com.sergdalm.file_storage.dto.FileUploadResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.LocalDateTime;
@@ -46,23 +47,21 @@ public class AmazonClient {
     }
 
     public void uploadFileTos3bucket(String fileName, File file) {
-//        s3client.putObject(awsProperties.bucketName(), fileName, file);
         s3client.putObject(new PutObjectRequest(awsProperties.bucketName(), fileName, file)
                 .withCannedAcl(CannedAccessControlList.PublicRead));
     }
 
-    public String uploadFile(String fileName, MultipartFile multipartFile) {
-        String fileUrl = "";
+    public FileUploadResult uploadFile(String fileName, MultipartFile multipartFile) {
         try {
             File file = convertMultiPartToFile(multipartFile);
             String generatedFileName = generateFileName(fileName);
-            fileUrl = awsProperties.endpointUrl() + "/" + awsProperties.bucketName() + "/" + generatedFileName;
-            uploadFileTos3bucket(fileName, file);
+            uploadFileTos3bucket(generatedFileName, file);
             file.delete();
+            return new FileUploadResult(generatedFileName, true);
         } catch (Exception e) {
             e.printStackTrace();
+            return new FileUploadResult(null, false);
         }
-        return fileUrl;
     }
 
     public String deleteFileFromS3Bucket(String fileUrl) {
@@ -71,7 +70,7 @@ public class AmazonClient {
         return "Successfully deleted";
     }
 
-    public S3Object downloadFromS3Bucket(String fileName) {
-        return s3client.getObject(awsProperties.bucketName(), fileName);
+    public S3ObjectInputStream downloadFromS3Bucket(String fileUrl) {
+        return s3client.getObject(awsProperties.bucketName(), fileUrl).getObjectContent();
     }
 }

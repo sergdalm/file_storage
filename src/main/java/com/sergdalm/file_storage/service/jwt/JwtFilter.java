@@ -1,5 +1,6 @@
 package com.sergdalm.file_storage.service.jwt;
 
+import com.sergdalm.file_storage.dto.jwt.JwtAuthentication;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
