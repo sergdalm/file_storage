@@ -28,8 +28,5 @@ public interface GenericService<ID, C, R, E> {
 
     R create(C dto);
 
-    Optional<R> update(ID id, C dto);
-
-
     boolean delete(ID id);
 }

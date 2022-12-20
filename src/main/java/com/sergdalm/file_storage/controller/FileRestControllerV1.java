@@ -1,7 +1,7 @@
-package com.sergdalm.file_storage.http.rest;
+package com.sergdalm.file_storage.controller;
 
-import com.sergdalm.file_storage.dto.FileCreateEditDto;
-import com.sergdalm.file_storage.dto.FileCreateEditDtoForRest;
+import com.sergdalm.file_storage.dto.FileCreateDto;
+import com.sergdalm.file_storage.dto.FileEditDto;
 import com.sergdalm.file_storage.dto.FileReadDto;
 import com.sergdalm.file_storage.dto.UserReadDto;
 import com.sergdalm.file_storage.dto.jwt.JwtAuthentication;
@@ -15,12 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,8 +36,7 @@ import static org.springframework.http.ResponseEntity.notFound;
 @RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
 @Getter
-public class FileRestControllerV1 implements EditGenericRestController<Integer, FileCreateEditDtoForRest, FileReadDto, JwtAuthentication>,
-        ReadGenericRestController<Integer, FileCreateEditDto, FileReadDto> {
+public class FileRestControllerV1 implements ReadGenericRestController<Integer, FileCreateDto, FileReadDto> {
 
     private final FileService service;
     private final UserService userService;
@@ -66,26 +64,28 @@ public class FileRestControllerV1 implements EditGenericRestController<Integer, 
     public FileReadDto create(String fileName,
                               MultipartFile fileContent,
                               JwtAuthentication jwtAuthentication) {
-        return service.create(FileCreateEditDto.builder()
+        return service.create(FileCreateDto.builder()
                 .userId(jwtAuthentication.getId())
                 .fileContent(fileContent)
                 .fileName(fileName)
                 .build());
     }
 
+    @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MODERATOR')")
     public FileReadDto update(@PathVariable("id") Integer fileId,
-                              @Validated @RequestBody FileCreateEditDtoForRest fileDto,
+                              String newFileName,
                               JwtAuthentication jwtAuthentication) {
-        if (checkIfDoNotHaveAccess(fileId, jwtAuthentication)) {
+        if (checkIfUserHasAccess(fileId, jwtAuthentication)) {
+            return service.update(fileId, FileEditDto.builder()
+                            .userId(jwtAuthentication.getId())
+                            .newFileName(newFileName)
+                            .build())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        return service.update(fileId, FileCreateEditDto.builder()
-                        .userId(jwtAuthentication.getId())
-                        .fileContent(fileDto.getFileContent())
-                        .fileName(fileDto.getName())
-                        .build())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
     }
 
     @DeleteMapping("/{id}")
@@ -93,16 +93,18 @@ public class FileRestControllerV1 implements EditGenericRestController<Integer, 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MODERATOR')")
     public ResponseEntity<?> delete(@PathVariable("id") Integer fileId,
                                     JwtAuthentication jwtAuthentication) {
-        if (checkIfDoNotHaveAccess(fileId, jwtAuthentication)) {
+        if (checkIfUserHasAccess(fileId, jwtAuthentication)) {
+            return service.delete(fileId)
+                    ? noContent().build()
+                    : notFound().build();
+        } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        return service.delete(fileId)
-                ? noContent().build()
-                : notFound().build();
+
     }
 
-    // This method checks if this file was not uploaded by the user or if it is not ADMIN
-    private boolean checkIfDoNotHaveAccess(Integer fileId, JwtAuthentication jwtAuthentication) {
+    // This method checks if this file was uploaded by the user or if it is ADMIN
+    private boolean checkIfUserHasAccess(Integer fileId, JwtAuthentication jwtAuthentication) {
         if (jwtAuthentication.getAuthorities().contains(Role.ADMIN)) {
             return true;
         }

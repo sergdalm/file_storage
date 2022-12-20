@@ -34,11 +34,21 @@ public class AmazonClient {
 
     }
 
-    public File convertMultiPartToFile(MultipartFile file) throws IOException {
-        File convFile = new File(Objects.requireNonNull(file.getOriginalFilename()));
-        FileOutputStream fos = new FileOutputStream(convFile);
-        fos.write(file.getBytes());
-        fos.close();
+    public File convertMultiPartToFile(MultipartFile multipartFile) throws IOException {
+        File convFile;
+        String fileName;
+        if (!Objects.equals(multipartFile.getOriginalFilename(), "")) {
+            fileName = multipartFile.getOriginalFilename();
+            convFile = new File(Objects.requireNonNull(fileName));
+            FileOutputStream outputStream = new FileOutputStream(convFile);
+            outputStream.write(multipartFile.getBytes());
+            outputStream.close();
+        } else {
+            // This code was wrote in order to make test run
+            fileName = multipartFile.getName();
+            convFile = new File(fileName);
+            multipartFile.transferTo(convFile);
+        }
         return convFile;
     }
 
@@ -66,7 +76,7 @@ public class AmazonClient {
 
     public String deleteFileFromS3Bucket(String fileUrl) {
         String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-        s3client.deleteObject(new DeleteObjectRequest(awsProperties.bucketName() + "/", fileName));
+        s3client.deleteObject(new DeleteObjectRequest(awsProperties.bucketName(), fileName));
         return "Successfully deleted";
     }
 

@@ -1,4 +1,4 @@
-package com.sergdalm.file_storage.http.rest;
+package com.sergdalm.file_storage.controller;
 
 import com.sergdalm.file_storage.dto.jwt.JwtRequest;
 import com.sergdalm.file_storage.dto.jwt.JwtResponse;
@@ -6,7 +6,6 @@ import com.sergdalm.file_storage.dto.jwt.RefreshJwtRequest;
 import com.sergdalm.file_storage.service.jwt.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +19,6 @@ import javax.servlet.http.HttpSession;
 public class AuthRestControllerV1 {
 
     private final AuthService authService;
-    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest authRequest, HttpSession httpSession) {

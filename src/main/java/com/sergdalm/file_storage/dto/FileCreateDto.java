@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Value
 @Builder
-public class FileCreateEditDto {
+public class FileCreateDto {
     Integer userId;
     String fileName;
     MultipartFile fileContent;

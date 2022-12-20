@@ -1,4 +1,4 @@
-package com.sergdalm.file_storage.http.rest;
+package com.sergdalm.file_storage.controller;
 
 import com.sergdalm.file_storage.service.GenericService;
 import org.springframework.http.HttpStatus;

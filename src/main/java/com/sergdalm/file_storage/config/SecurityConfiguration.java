@@ -1,9 +1,11 @@
 package com.sergdalm.file_storage.config;
 
+import com.sergdalm.file_storage.model.Role;
 import com.sergdalm.file_storage.service.jwt.JwtFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -37,7 +39,9 @@ public class SecurityConfiguration {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(urlConfig -> urlConfig
+                        .antMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                         .antMatchers("v3/api-docs/**", "/swagger-ui/**", "/api/v1/auth/login", "/api/v1/auth/token").permitAll()
+                        .antMatchers(HttpMethod.POST, "api/v1/files").hasAnyAuthority(Role.MODERATOR.getAuthority(), Role.MODERATOR.getAuthority())
                         .anyRequest().authenticated()
                         .and()
                 );

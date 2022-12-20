@@ -39,7 +39,6 @@ public class UserService implements GenericService<Integer, UserCreateEditDto, U
     }
 
     @Transactional
-    @Override
     public Optional<UserReadDto> update(Integer id, UserCreateEditDto userDto) {
         return getRepository().findById(id)
                 .map(entity -> getCreateEditMapper().mapToEntity(userDto, entity))
@@ -52,9 +51,6 @@ public class UserService implements GenericService<Integer, UserCreateEditDto, U
     public boolean delete(Integer id) {
         return getRepository().findById(id)
                 .map(entity -> {
-//                    entity.getEvents().stream()
-//                            .filter(event -> event.getType().equals(Type.UPLOAD))
-//                            .forEach(file -> fileService.delete(file.getId()));
                     getRepository().delete(entity);
                     getRepository().flush();
                     return true;

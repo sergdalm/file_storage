@@ -20,6 +20,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+/**
+ * Generate and validate access and refresh tokens.
+ */
 @Slf4j
 @Component
 public class JwtProvider {

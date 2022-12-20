@@ -35,15 +35,6 @@ public class EventService implements GenericService<Integer, EventCreateDto, Eve
 
     @Transactional
     @Override
-    public Optional<EventReadDto> update(Integer id, EventCreateDto dto) {
-        return getRepository().findById(id)
-                .map(entity -> getCreateEditMapper().mapToEntity(dto, entity))
-                .map(getRepository()::saveAndFlush)
-                .map(getReadMapper()::mapToDto);
-    }
-
-    @Transactional
-    @Override
     public boolean delete(Integer id) {
         return getRepository().findById(id)
                 .map(entity -> {

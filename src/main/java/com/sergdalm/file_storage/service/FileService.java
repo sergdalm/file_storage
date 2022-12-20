@@ -1,7 +1,8 @@
 package com.sergdalm.file_storage.service;
 
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.sergdalm.file_storage.dto.FileCreateEditDto;
+import com.sergdalm.file_storage.dto.FileCreateDto;
+import com.sergdalm.file_storage.dto.FileEditDto;
 import com.sergdalm.file_storage.dto.FileReadDto;
 import com.sergdalm.file_storage.dto.FileUploadResult;
 import com.sergdalm.file_storage.mapper.CreateEditMapper;
@@ -34,19 +35,19 @@ import java.util.Optional;
 @AllArgsConstructor
 @Getter
 @Slf4j
-public class FileService implements GenericService<Integer, FileCreateEditDto, FileReadDto, File> {
+public class FileService implements GenericService<Integer, FileCreateDto, FileReadDto, File> {
 
     private final FileRepository repository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final AmazonClient amazonClient;
-    private final CreateEditMapper<File, FileCreateEditDto> createEditMapper;
+    private final CreateEditMapper<File, FileCreateDto> createEditMapper;
     private final ReadMapper<File, FileReadDto> readMapper;
     private final String bucket = "";
 
     @Transactional
     @Override
-    public FileReadDto create(FileCreateEditDto dto) {
+    public FileReadDto create(FileCreateDto dto) {
         MultipartFile fileContent = dto.getFileContent();
         FileUploadResult fileUploadResult = amazonClient.uploadFile(dto.getFileName(), dto.getFileContent());
         if (!fileUploadResult.isUploadedResult()) {
@@ -70,17 +71,11 @@ public class FileService implements GenericService<Integer, FileCreateEditDto, F
     }
 
     @Transactional
-    @Override
-    public Optional<FileReadDto> update(Integer id, FileCreateEditDto dto) {
+    public Optional<FileReadDto> update(Integer id, FileEditDto dto) {
         return getRepository().findById(id)
                 .map(entity -> {
-                    amazonClient.deleteFileFromS3Bucket(entity.getFileUrl());
-                    FileUploadResult fileUploadResult = amazonClient.uploadFile(dto.getFileName(), dto.getFileContent());
-                    if (!fileUploadResult.isUploadedResult()) {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                    entity.setFileUrl(fileUploadResult.getFileUrl());
-                    return getCreateEditMapper().mapToEntity(dto, entity);
+                    entity.setName(dto.getNewFileName());
+                    return entity;
                 })
                 .map(getRepository()::saveAndFlush)
                 .map(getReadMapper()::mapToDto);
