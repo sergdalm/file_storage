@@ -1,6 +1,7 @@
 package com.sergdalm.file_storage.integration;
 
 import com.sergdalm.file_storage.config.AmazonS3Configuration;
+import com.sergdalm.file_storage.config.JacksonConfiguration;
 import io.findify.s3mock.S3Mock;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,7 +20,7 @@ import org.testcontainers.containers.MySQLContainer;
 @ActiveProfiles("test")
 @Transactional
 @SpringBootTest
-@Import({AmazonS3Configuration.class})
+@Import({AmazonS3Configuration.class, JacksonConfiguration.class})
 @Sql({
         "classpath:sql/data.sql"
 })
